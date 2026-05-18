@@ -11,7 +11,7 @@
     padding:0;
     box-sizing:border-box;
     font-family:Arial,sans-serif;
-    -webkit-tap-highlight-color: transparent; /* Smooth touch for mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body{
@@ -40,7 +40,7 @@ body{
     font-size:14px;
 }
 
-/* FOLDER GRID - Highly Mobile Friendly */
+/* FOLDER GRID */
 .folder-grid{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -53,27 +53,25 @@ body{
     border:1px solid rgba(255,255,255,0.08);
     border-radius:14px;
     overflow:hidden;
-    transition: 0.25s ease;
+    transition: 0.2s ease;
     backdrop-filter:blur(8px);
-    height: max-content; /* Prevents grid stretching layout issues */
-}
-
-.folder-card:hover{
-    border-color:#6366f1;
-}
-
-/* FOLDER HEADER */
-.folder-header{
-    padding:14px;
     cursor:pointer;
-    user-select: none;
 }
 
-.folder-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap: 8px;
+.folder-card:active {
+    transform: scale(0.97);
+    background:rgba(255,255,255,0.1);
+}
+
+.folder-header{
+    padding:20px 14px;
+    text-align: center;
+}
+
+.folder-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .folder-name{
@@ -81,45 +79,86 @@ body{
     font-weight:bold;
     line-height:1.3;
     word-break:break-word;
+    margin-bottom: 8px;
 }
 
 .folder-count{
+    display: inline-block;
     background:#6366f1;
     color: white;
-    padding:3px 8px;
+    padding:3px 10px;
     border-radius:12px;
     font-size:11px;
-    flex-shrink:0;
 }
 
-/* FILES LIST */
-.file-list{
-    max-height:0;
-    overflow:hidden;
-    transition: max-height 0.35s ease-out;
-    background: rgba(0, 0, 0, 0.2);
+/* FULL SCREEN MOBILE FILE VIEWER (OVERLAY) */
+.folder-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0f172a;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.file-list.active{
-    max-height: 1000px; /* Sensible limit for smooth animation */
+.folder-overlay.open {
+    transform: translateY(0);
 }
 
-/* FILE ITEM */
+.overlay-header {
+    display: flex;
+    align-items: center;
+    padding: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.02);
+}
+
+.back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.overlay-title {
+    font-size: 18px;
+    font-weight: bold;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.overlay-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+/* FILE ITEM INSIDE OVERLAY */
 .file-item{
-    padding:12px 14px;
-    border-top:1px solid rgba(255,255,255,0.06);
+    padding: 16px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
     cursor:pointer;
-    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.file-item:hover{
+.file-item:active{
     background:rgba(99,102,241,0.2);
 }
 
 .file-title{
-    font-size:13px;
+    font-size:15px;
     line-height:1.4;
-    color: #cbd5e1;
+    color: #e2e8f0;
 }
 
 /* LOADER */
@@ -160,18 +199,13 @@ body{
     grid-column: 1 / -1;
 }
 
-/* MOBILE OPTIMIZATIONS */
+/* MOBILE VIEWPORTS */
 @media(max-width:400px){
     .folder-grid{
-        grid-template-columns: repeat(2, 1fr); /* 2 Columns on tiny phones */
+        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
-    .folder-name {
-        font-size: 13px;
-    }
-    body {
-        padding: 10px;
-    }
+    body { padding: 10px; }
 }
 </style>
 </head>
@@ -188,8 +222,19 @@ body{
     <p>Practice Sets Collection</p>
 </div>
 
-<!-- FOLDERS -->
+<!-- FOLDERS GRID -->
 <div class="folder-grid" id="folderGrid"></div>
+
+<!-- FULL SCREEN FILE OVERLAY -->
+<div class="folder-overlay" id="folderOverlay">
+    <div class="overlay-header">
+        <button class="back-btn" onclick="closeFolder()">← Back</button>
+        <div class="overlay-title" id="overlayTitle">Folder Name</div>
+    </div>
+    <div class="overlay-content" id="overlayContent">
+        <!-- Files will dynamically load here -->
+    </div>
+</div>
 
 <script>
 /*
@@ -199,6 +244,8 @@ ADD YOUR DETAILS
 */
 const username = "officialappaarav-spec";
 const repo = "folders-test";
+
+let globalFolders = {}; // Store data globally to read when clicked
 
 /*
 ====================================================
@@ -213,12 +260,11 @@ function showLoader() {
     document.getElementById("loader").classList.remove("hide");
 }
 
-// Handles initial load
 window.addEventListener("load", () => {
     setTimeout(hideLoader, 400);
 });
 
-// Handles browser back button cache restore (Critical for iOS Safari/Chrome Mobile)
+// Fixes the infinite spinning wheel when returning via browser back button
 window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
         hideLoader();
@@ -258,58 +304,49 @@ async function loadFiles(){
     }catch(error){
         console.error(error);
         document.getElementById("folderGrid").innerHTML = `
-            <div class="empty">Failed To Load Files. Check Repository settings.</div>
+            <div class="empty">Failed To Load Files. Check Repository configurations.</div>
         `;
     }
 }
 
-/*
-====================================================
-PROCESS FOLDERS
-====================================================
-*/
 function createFolders(files){
-    const folders = {};
+    globalFolders = {};
 
     files.forEach(file => {
         const category = getCategory(file);
-        if(!folders[category]) folders[category] = [];
-        folders[category].push(file);
+        if(!globalFolders[category]) globalFolders[category] = [];
+        globalFolders[category].push(file);
     });
 
-    // Sort Descending (Highest numbers first)
-    Object.keys(folders).forEach(category => {
-        folders[category].sort((a,b) => getNumber(b) - getNumber(a));
+    // Sort Descending
+    Object.keys(globalFolders).forEach(category => {
+        globalFolders[category].sort((a,b) => getNumber(b) - getNumber(a));
     });
 
-    renderFolders(folders);
+    renderFolders(globalFolders);
 }
 
 /*
 ====================================================
-RENDER MARKUP
+RENDER MAIN GRID
 ====================================================
 */
 function renderFolders(folders){
     const folderGrid = document.getElementById("folderGrid");
     folderGrid.innerHTML = "";
 
-    Object.keys(folders).forEach((category, index) => {
+    Object.keys(folders).forEach((category) => {
         const folder = document.createElement("div");
         folder.className = "folder-card";
+        // Passing category string safely via base64 encoding to prevent quote syntax breakage
+        const safeCategory = btoa(unescape(encodeURIComponent(category)));
+        
+        folder.setAttribute("onclick", `openFolder('${safeCategory}')`);
         folder.innerHTML = `
-            <div class="folder-header" onclick="toggleFolder(${index}, event)">
-                <div class="folder-top">
-                    <div class="folder-name">📁 ${category}</div>
-                    <div class="folder-count">${folders[category].length}</div>
-                </div>
-            </div>
-            <div class="file-list" id="folder-${index}">
-                ${folders[category].map(file => `
-                    <div class="file-item" onclick="openFile('${file}', event)">
-                        <div class="file-title">${file.replace(".html","")}</div>
-                    </div>
-                `).join("")}
+            <div class="folder-header">
+                <span class="folder-icon">📁</span>
+                <div class="folder-name">${category}</div>
+                <div class="folder-count">${folders[category].length} Sets</div>
             </div>
         `;
         folderGrid.appendChild(folder);
@@ -318,24 +355,28 @@ function renderFolders(folders){
 
 /*
 ====================================================
-TOGGLE TARGETED FOLDER ONLY
+OPEN OVERLAY VIEW (INSTEAD OF ACCORDION)
 ====================================================
 */
-function toggleFolder(index, event){
-    if(event) event.stopPropagation();
+function openFolder(encodedCategory) {
+    const category = decodeURIComponent(escape(atob(encodedCategory)));
+    const files = globalFolders[category];
     
-    const targetFolder = document.getElementById(`folder-${index}`);
-    const allFolders = document.querySelectorAll(".file-list");
+    document.getElementById("overlayTitle").innerText = `📁 ${category}`;
+    
+    const contentContainer = document.getElementById("overlayContent");
+    contentContainer.innerHTML = files.map(file => `
+        <div class="file-item" onclick="openFile('${file}')">
+            <span>📄</span>
+            <div class="file-title">${file.replace(".html","")}</div>
+        </div>
+    `).join("");
+    
+    document.getElementById("folderOverlay").classList.add("open");
+}
 
-    // Close all folders except the selected one
-    allFolders.forEach(folder => {
-        if(folder !== targetFolder){
-            folder.classList.remove("active");
-        }
-    });
-
-    // Toggle selected folder
-    targetFolder.classList.toggle("active");
+function closeFolder() {
+    document.getElementById("folderOverlay").classList.remove("open");
 }
 
 /*
@@ -343,12 +384,8 @@ function toggleFolder(index, event){
 NAVIGATION
 ====================================================
 */
-function openFile(file, event){
-    if(event) event.stopPropagation();
-    
+function openFile(file){
     showLoader();
-
-    // Small delay to ensure loader visual displays before navigation redirects
     setTimeout(() => {
         window.location.href = file;
     }, 200);
