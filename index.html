@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Banking Mains</title>
 
 <style>
@@ -17,19 +17,19 @@
 body{
     background:#0f172a;
     color:white;
+    padding:15px;
     min-height:100vh;
-    padding:20px;
 }
 
 /* HEADER */
 
 .header{
     text-align:center;
-    margin-bottom:35px;
+    margin-bottom:25px;
 }
 
 .header h1{
-    font-size:42px;
+    font-size:34px;
     background:linear-gradient(90deg,#60a5fa,#8b5cf6);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
@@ -37,15 +37,16 @@ body{
 
 .header p{
     color:#94a3b8;
-    margin-top:10px;
+    margin-top:8px;
+    font-size:14px;
 }
 
 /* FOLDER GRID */
 
 .folder-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:15px;
 }
 
 /* FOLDER CARD */
@@ -53,59 +54,62 @@ body{
 .folder-card{
     background:rgba(255,255,255,0.05);
     border:1px solid rgba(255,255,255,0.08);
-    border-radius:22px;
+    border-radius:18px;
     overflow:hidden;
     transition:0.3s;
+    backdrop-filter:blur(8px);
 }
 
 .folder-card:hover{
     border-color:#6366f1;
-    transform:translateY(-5px);
+    transform:translateY(-4px);
 }
 
-/* FOLDER HEADER */
+/* HEADER */
 
 .folder-header{
-    padding:22px;
+    padding:18px;
     cursor:pointer;
+}
+
+.folder-top{
     display:flex;
-    justify-content:space-between;
     align-items:center;
-    background:rgba(255,255,255,0.03);
+    justify-content:space-between;
 }
 
 .folder-name{
-    font-size:22px;
+    font-size:17px;
     font-weight:bold;
+    line-height:1.4;
+    word-break:break-word;
 }
 
 .folder-count{
     background:#6366f1;
-    padding:6px 12px;
+    padding:5px 10px;
     border-radius:20px;
-    font-size:14px;
+    font-size:12px;
+    flex-shrink:0;
 }
 
-/* FILE LIST */
+/* FILES */
 
 .file-list{
     max-height:0;
     overflow:hidden;
-    transition:max-height 0.5s ease;
+    transition:max-height 0.4s ease;
 }
 
 .file-list.active{
-    max-height:2000px;
+    max-height:2500px;
 }
 
-/* FILE ITEM */
+/* FILE */
 
 .file-item{
-    padding:18px 22px;
-    border-top:1px solid rgba(255,255,255,0.05);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    padding:14px 18px;
+    border-top:1px solid rgba(255,255,255,0.06);
     cursor:pointer;
     transition:0.3s;
 }
@@ -115,14 +119,8 @@ body{
 }
 
 .file-title{
-    font-size:17px;
-}
-
-.open-btn{
-    background:#6366f1;
-    padding:8px 14px;
-    border-radius:10px;
-    font-size:13px;
+    font-size:14px;
+    line-height:1.5;
 }
 
 /* LOADER */
@@ -131,19 +129,21 @@ body{
     position:fixed;
     inset:0;
     background:#0f172a;
-    display:none;
+    display:flex;
     align-items:center;
     justify-content:center;
-    z-index:9999;
+    z-index:99999;
+    transition:0.3s;
 }
 
-.loader-overlay.active{
-    display:flex;
+.loader-overlay.hide{
+    opacity:0;
+    pointer-events:none;
 }
 
 .loader{
-    width:75px;
-    height:75px;
+    width:70px;
+    height:70px;
     border:7px solid rgba(255,255,255,0.1);
     border-top:7px solid #6366f1;
     border-radius:50%;
@@ -162,19 +162,23 @@ body{
     text-align:center;
     color:#94a3b8;
     margin-top:50px;
-    font-size:20px;
+    font-size:18px;
 }
 
 /* MOBILE */
 
 @media(max-width:600px){
 
-    .header h1{
-        font-size:30px;
+    .folder-grid{
+        grid-template-columns:repeat(2,1fr);
     }
 
     .folder-name{
-        font-size:18px;
+        font-size:15px;
+    }
+
+    .header h1{
+        font-size:28px;
     }
 
 }
@@ -184,39 +188,53 @@ body{
 
 <body>
 
-<div class="header">
-    <h1>Banking Mains</h1>
-    <p>Practice Sets Collection</p>
-</div>
-
-<div class="folder-grid" id="folderGrid"></div>
-
 <!-- LOADER -->
 
 <div class="loader-overlay" id="loader">
     <div class="loader"></div>
 </div>
 
+<!-- HEADER -->
+
+<div class="header">
+    <h1>Banking Mains</h1>
+    <p>Practice Sets Collection</p>
+</div>
+
+<!-- FOLDERS -->
+
+<div class="folder-grid" id="folderGrid"></div>
+
 <script>
 
 /*
 ====================================================
-CHANGE THESE
+ADD YOUR DETAILS
 ====================================================
 */
 
-const username = "officialappaarav-spec";
-const repo = "folders-test";
+const username = "YOUR_GITHUB_USERNAME";
+const repo = "YOUR_REPOSITORY_NAME";
 
 /*
 ====================================================
-GET CATEGORY NAME
+REMOVE LOADER AFTER PAGE LOAD
 ====================================================
+*/
 
-Puzzle 1.html -> Puzzle
-Puzzle 20.html -> Puzzle
-Seating Arrangement 3.html -> Seating Arrangement
+window.addEventListener("load",()=>{
 
+    setTimeout(()=>{
+
+        document.getElementById("loader").classList.add("hide");
+
+    },500);
+
+});
+
+/*
+====================================================
+CATEGORY NAME
 ====================================================
 */
 
@@ -230,7 +248,7 @@ function getCategory(fileName){
 
 /*
 ====================================================
-GET FILE NUMBER
+NUMBER
 ====================================================
 */
 
@@ -244,7 +262,7 @@ function getNumber(fileName){
 
 /*
 ====================================================
-FETCH FILES FROM GITHUB
+LOAD FILES
 ====================================================
 */
 
@@ -258,12 +276,13 @@ async function loadFiles(){
 
         const data = await response.json();
 
-        // ONLY HTML FILES
         const files = data
             .filter(file =>
+
                 file.name.endsWith(".html")
                 &&
                 file.name.toLowerCase() !== "index.html"
+
             )
             .map(file => file.name);
 
@@ -285,7 +304,7 @@ async function loadFiles(){
 
 /*
 ====================================================
-CREATE FOLDERS AUTOMATICALLY
+CREATE FOLDERS
 ====================================================
 */
 
@@ -293,9 +312,7 @@ function createFolders(files){
 
     const folders = {};
 
-    // CREATE GROUPS
-
-    files.forEach(file => {
+    files.forEach(file=>{
 
         const category = getCategory(file);
 
@@ -309,7 +326,7 @@ function createFolders(files){
 
     // SORT DESCENDING
 
-    Object.keys(folders).forEach(category => {
+    Object.keys(folders).forEach(category=>{
 
         folders[category].sort((a,b)=>{
 
@@ -325,7 +342,7 @@ function createFolders(files){
 
 /*
 ====================================================
-RENDER FOLDERS
+RENDER
 ====================================================
 */
 
@@ -338,18 +355,23 @@ function renderFolders(folders){
     Object.keys(folders).forEach((category,index)=>{
 
         const folder = document.createElement("div");
+
         folder.className = "folder-card";
 
         folder.innerHTML = `
 
             <div class="folder-header" onclick="toggleFolder(${index})">
 
-                <div class="folder-name">
-                    📁 ${category}
-                </div>
+                <div class="folder-top">
 
-                <div class="folder-count">
-                    ${folders[category].length}
+                    <div class="folder-name">
+                        📁 ${category}
+                    </div>
+
+                    <div class="folder-count">
+                        ${folders[category].length}
+                    </div>
+
                 </div>
 
             </div>
@@ -358,14 +380,11 @@ function renderFolders(folders){
 
                 ${folders[category].map(file => `
 
-                    <div class="file-item" onclick="openFile('${file}')">
+                    <div class="file-item"
+                        onclick="openFile('${file}')">
 
                         <div class="file-title">
                             ${file.replace(".html","")}
-                        </div>
-
-                        <div class="open-btn">
-                            Open
                         </div>
 
                     </div>
@@ -384,15 +403,33 @@ function renderFolders(folders){
 
 /*
 ====================================================
-TOGGLE FOLDER
+TOGGLE SINGLE FOLDER ONLY
 ====================================================
 */
 
 function toggleFolder(index){
 
-    const folder = document.getElementById(`folder-${index}`);
+    const targetFolder =
+        document.getElementById(`folder-${index}`);
 
-    folder.classList.toggle("active");
+    const allFolders =
+        document.querySelectorAll(".file-list");
+
+    // CLOSE ALL FIRST
+
+    allFolders.forEach(folder=>{
+
+        if(folder !== targetFolder){
+
+            folder.classList.remove("active");
+
+        }
+
+    });
+
+    // OPEN CURRENT
+
+    targetFolder.classList.toggle("active");
 
 }
 
@@ -402,14 +439,20 @@ OPEN FILE
 ====================================================
 */
 
-const loader = document.getElementById("loader");
-
 function openFile(file){
 
-    loader.classList.add("active");
+    // SHOW LOADER
+
+    document.getElementById("loader")
+        .classList.remove("hide");
 
     // OPEN FILE
-    window.location.href = file;
+
+    setTimeout(()=>{
+
+        window.location.href = file;
+
+    },300);
 
 }
 
