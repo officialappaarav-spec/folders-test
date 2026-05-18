@@ -29,7 +29,7 @@ body{
 }
 
 .header h1{
-    font-size:34px;
+    font-size:32px;
     background:linear-gradient(90deg,#60a5fa,#8b5cf6);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
@@ -41,15 +41,34 @@ body{
     font-size:14px;
 }
 
-/* FOLDER GRID */
+/* GRID */
 
 .folder-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-    gap:15px;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:16px;
 }
 
-/* FOLDER CARD */
+/* MOBILE GRID */
+
+@media(max-width:700px){
+
+    .folder-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:450px){
+
+    .folder-grid{
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+    }
+
+}
+
+/* FOLDER */
 
 .folder-card{
     background:rgba(255,255,255,0.05);
@@ -57,15 +76,13 @@ body{
     border-radius:18px;
     overflow:hidden;
     transition:0.3s;
-    backdrop-filter:blur(8px);
 }
 
 .folder-card:hover{
     border-color:#6366f1;
-    transform:translateY(-4px);
 }
 
-/* HEADER */
+/* FOLDER HEADER */
 
 .folder-header{
     padding:18px;
@@ -76,10 +93,11 @@ body{
     display:flex;
     align-items:center;
     justify-content:space-between;
+    gap:10px;
 }
 
 .folder-name{
-    font-size:17px;
+    font-size:16px;
     font-weight:bold;
     line-height:1.4;
     word-break:break-word;
@@ -93,16 +111,14 @@ body{
     flex-shrink:0;
 }
 
-/* FILES */
+/* FILE LIST */
 
 .file-list{
-    max-height:0;
-    overflow:hidden;
-    transition:max-height 0.4s ease;
+    display:none;
 }
 
 .file-list.active{
-    max-height:2500px;
+    display:block;
 }
 
 /* FILE */
@@ -137,23 +153,24 @@ body{
 }
 
 .loader-overlay.hide{
-    opacity:0;
-    pointer-events:none;
+    display:none;
 }
 
 .loader{
     width:70px;
     height:70px;
-    border:7px solid rgba(255,255,255,0.1);
+    border:7px solid rgba(255,255,255,0.12);
     border-top:7px solid #6366f1;
     border-radius:50%;
     animation:spin 1s linear infinite;
 }
 
 @keyframes spin{
+
     100%{
         transform:rotate(360deg);
     }
+
 }
 
 /* EMPTY */
@@ -163,24 +180,6 @@ body{
     color:#94a3b8;
     margin-top:50px;
     font-size:18px;
-}
-
-/* MOBILE */
-
-@media(max-width:600px){
-
-    .folder-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .folder-name{
-        font-size:15px;
-    }
-
-    .header h1{
-        font-size:28px;
-    }
-
 }
 
 </style>
@@ -209,7 +208,7 @@ body{
 
 /*
 ====================================================
-ADD YOUR DETAILS
+YOUR GITHUB DETAILS
 ====================================================
 */
 
@@ -218,23 +217,23 @@ const repo = "folders-test";
 
 /*
 ====================================================
-REMOVE LOADER AFTER PAGE LOAD
+REMOVE LOADER AFTER PAGE FULLY LOADS
 ====================================================
 */
 
-window.addEventListener("load",()=>{
+window.onload = function(){
 
-    setTimeout(()=>{
+    // VERY IMPORTANT FIX
 
-        document.getElementById("loader").classList.add("hide");
+    const loader = document.getElementById("loader");
 
-    },500);
+    loader.classList.add("hide");
 
-});
+};
 
 /*
 ====================================================
-CATEGORY NAME
+GET CATEGORY
 ====================================================
 */
 
@@ -248,7 +247,7 @@ function getCategory(fileName){
 
 /*
 ====================================================
-NUMBER
+GET NUMBER
 ====================================================
 */
 
@@ -288,14 +287,18 @@ async function loadFiles(){
 
         createFolders(files);
 
-    }catch(error){
+    }
+
+    catch(error){
 
         console.error(error);
 
         document.getElementById("folderGrid").innerHTML = `
+
             <div class="empty">
                 Failed To Load Files
             </div>
+
         `;
 
     }
@@ -317,14 +320,16 @@ function createFolders(files){
         const category = getCategory(file);
 
         if(!folders[category]){
+
             folders[category] = [];
+
         }
 
         folders[category].push(file);
 
     });
 
-    // SORT DESCENDING
+    // DESCENDING ORDER
 
     Object.keys(folders).forEach(category=>{
 
@@ -348,19 +353,22 @@ RENDER
 
 function renderFolders(folders){
 
-    const folderGrid = document.getElementById("folderGrid");
+    const folderGrid =
+        document.getElementById("folderGrid");
 
     folderGrid.innerHTML = "";
 
     Object.keys(folders).forEach((category,index)=>{
 
-        const folder = document.createElement("div");
+        const folder =
+            document.createElement("div");
 
         folder.className = "folder-card";
 
         folder.innerHTML = `
 
-            <div class="folder-header" onclick="toggleFolder(${index})">
+            <div class="folder-header"
+                 onclick="toggleFolder(${index})">
 
                 <div class="folder-top">
 
@@ -376,12 +384,13 @@ function renderFolders(folders){
 
             </div>
 
-            <div class="file-list" id="folder-${index}">
+            <div class="file-list"
+                 id="folder-${index}">
 
                 ${folders[category].map(file => `
 
                     <div class="file-item"
-                        onclick="openFile('${file}')">
+                         onclick="openFile('${file}')">
 
                         <div class="file-title">
                             ${file.replace(".html","")}
@@ -403,33 +412,25 @@ function renderFolders(folders){
 
 /*
 ====================================================
-TOGGLE SINGLE FOLDER ONLY
+ONLY ONE FOLDER OPEN
 ====================================================
 */
 
 function toggleFolder(index){
 
-    const targetFolder =
-        document.getElementById(`folder-${index}`);
-
-    const allFolders =
-        document.querySelectorAll(".file-list");
-
     // CLOSE ALL FIRST
 
-    allFolders.forEach(folder=>{
+    document.querySelectorAll(".file-list")
+    .forEach(folder=>{
 
-        if(folder !== targetFolder){
-
-            folder.classList.remove("active");
-
-        }
+        folder.classList.remove("active");
 
     });
 
-    // OPEN CURRENT
+    // OPEN CLICKED ONE
 
-    targetFolder.classList.toggle("active");
+    document.getElementById(`folder-${index}`)
+    .classList.add("active");
 
 }
 
@@ -444,15 +445,11 @@ function openFile(file){
     // SHOW LOADER
 
     document.getElementById("loader")
-        .classList.remove("hide");
+    .classList.remove("hide");
 
     // OPEN FILE
 
-    setTimeout(()=>{
-
-        window.location.href = file;
-
-    },300);
+    window.location.href = file;
 
 }
 
